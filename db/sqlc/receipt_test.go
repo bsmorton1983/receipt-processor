@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/bsmorton1983/receipt_processor/db/util"
 	"github.com/stretchr/testify/require"
@@ -25,6 +26,7 @@ func createTestReceipt(t *testing.T) Receipt {
 	require.Equal(t, arg.PurchaseTime, receipt.PurchaseTime)
 
 	require.NotZero(t, receipt.ID)
+	require.NotZero(t, receipt.CreationTime)
 
 	return receipt
 }
@@ -44,6 +46,8 @@ func TestGetReceipt(t *testing.T) {
 	require.Equal(t, receipt1.Retailer, receipt2.Retailer)
 	require.Equal(t, receipt1.PurchaseDate, receipt2.PurchaseDate)
 	require.Equal(t, receipt1.PurchaseTime, receipt2.PurchaseTime)
+
+	require.WithinDuration(t, receipt1.CreationTime, receipt2.CreationTime, time.Second)
 }
 
 func TestDeleteReceipt(t *testing.T) {

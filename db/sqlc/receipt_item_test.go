@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/bsmorton1983/receipt_processor/db/util"
 	"github.com/stretchr/testify/require"
@@ -24,6 +25,7 @@ func createTestReceiptItem(t *testing.T, receipt Receipt) ReceiptItem {
 	require.Equal(t, arg.Price, receipt_item.Price)
 
 	require.NotZero(t, receipt_item.ID)
+	require.NotZero(t, receipt_item.CreationTime)
 
 	return receipt_item
 }
@@ -43,6 +45,8 @@ func TestGetReceiptItem(t *testing.T) {
 	require.Equal(t, receipt_item1.ReceiptID, receipt_item2.ReceiptID)
 	require.Equal(t, receipt_item1.ShortDescription, receipt_item2.ShortDescription)
 	require.Equal(t, receipt_item1.Price, receipt_item2.Price)
+
+	require.WithinDuration(t, receipt_item1.CreationTime, receipt_item2.CreationTime, time.Second)
 }
 
 func TestListReceiptItems(t *testing.T) {

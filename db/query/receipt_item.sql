@@ -17,3 +17,7 @@ WHERE receipt_id = $1
 ORDER BY id
 LIMIT $2
 OFFSET $3;
+
+-- name: DeleteReceiptItem :exec
+DELETE FROM receipt_items
+WHERE id = $1;

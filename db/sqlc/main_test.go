@@ -1,7 +1,9 @@
 package db
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -12,6 +14,27 @@ import (
 
 var testQueries *Queries
 var testDB *sql.DB
+
+var receipts_to_delete = []int64{}
+var receipt_items_to_delete = []int64{}
+
+func clear_receipts() {
+	for _, id := range receipts_to_delete {
+		err := testQueries.DeleteReceipt(context.Background(), id)
+		if err != nil {
+			fmt.Println("Error deleting receipt:", err)
+		}
+	}
+}
+
+func clear_receipt_items() {
+	for _, id := range receipt_items_to_delete {
+		err := testQueries.DeleteReceiptItem(context.Background(), id)
+		if err != nil {
+			fmt.Println("Error deleting receipt item:", err)
+		}
+	}
+}
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../..")

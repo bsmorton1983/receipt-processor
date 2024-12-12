@@ -38,6 +38,16 @@ func (q *Queries) CreateReceiptItem(ctx context.Context, arg CreateReceiptItemPa
 	return i, err
 }
 
+const deleteReceiptItem = `-- name: DeleteReceiptItem :exec
+DELETE FROM receipt_items
+WHERE id = $1
+`
+
+func (q *Queries) DeleteReceiptItem(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteReceiptItem, id)
+	return err
+}
+
 const getReceiptItem = `-- name: GetReceiptItem :one
 SELECT id, receipt_id, short_description, price, creation_time FROM receipt_items
 WHERE id = $1 LIMIT 1

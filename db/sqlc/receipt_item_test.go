@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createTestReceiptItem(t *testing.T, receipt Receipt) ReceiptItem {
+func createTestReceiptItem(t *testing.T, receipt Receipt, add_to_delete_queue bool) ReceiptItem {
 	arg := CreateReceiptItemParams{
 		ReceiptID:        receipt.ID,
 		ShortDescription: util.RandomDescription(),
@@ -27,15 +28,23 @@ func createTestReceiptItem(t *testing.T, receipt Receipt) ReceiptItem {
 	require.NotZero(t, receipt_item.ID)
 	require.NotZero(t, receipt_item.CreationTime)
 
+	if add_to_delete_queue {
+		receipt_items_to_delete = append(receipt_items_to_delete, receipt_item.ID)
+	}
+
+	t.Cleanup(func() {
+		clear_receipt_items()
+	})
+
 	return receipt_item
 }
 
 func TestCreateReceiptItem(t *testing.T) {
-	createTestReceiptItem(t, createTestReceipt(t))
+	createTestReceiptItem(t, createTestReceipt(t, true), true)
 }
 
 func TestGetReceiptItem(t *testing.T) {
-	receipt_item1 := createTestReceiptItem(t, createTestReceipt(t))
+	receipt_item1 := createTestReceiptItem(t, createTestReceipt(t, true), true)
 	receipt_item2, err := testQueries.GetReceiptItem(context.Background(), receipt_item1.ID)
 
 	require.NoError(t, err)
@@ -49,10 +58,22 @@ func TestGetReceiptItem(t *testing.T) {
 	require.WithinDuration(t, receipt_item1.CreationTime, receipt_item2.CreationTime, time.Second)
 }
 
+func TestDeleteReceiptItem(t *testing.T) {
+	receipt := createTestReceipt(t, true)
+	receipt_item1 := createTestReceiptItem(t, receipt, false)
+	err := testQueries.DeleteReceiptItem(context.Background(), receipt_item1.ID)
+	require.NoError(t, err)
+
+	receipt_item2, err := testQueries.GetReceiptItem(context.Background(), receipt_item1.ID)
+	require.Error(t, err)
+	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.Empty(t, receipt_item2)
+}
+
 func TestListReceiptItems(t *testing.T) {
-	receipt := createTestReceipt(t)
+	receipt := createTestReceipt(t, true)
 	for i := 0; i < 10; i++ {
-		createTestReceiptItem(t, receipt)
+		createTestReceiptItem(t, receipt, true)
 	}
 
 	arg := ListReceiptItemsParams{

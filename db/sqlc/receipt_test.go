@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createTestReceipt(t *testing.T) Receipt {
+func createTestReceipt(t *testing.T, add_to_delete_queue bool) Receipt {
 	arg := CreateReceiptParams{
 		Retailer:     util.RandomRetailer(),
 		PurchaseDate: util.CurrentDate(),
@@ -28,15 +28,23 @@ func createTestReceipt(t *testing.T) Receipt {
 	require.NotZero(t, receipt.ID)
 	require.NotZero(t, receipt.CreationTime)
 
+	if add_to_delete_queue {
+		receipts_to_delete = append(receipt_items_to_delete, receipt.ID)
+	}
+
+	t.Cleanup(func() {
+		clear_receipts()
+	})
+
 	return receipt
 }
 
 func TestCreateReceipt(t *testing.T) {
-	createTestReceipt(t)
+	createTestReceipt(t, true)
 }
 
 func TestGetReceipt(t *testing.T) {
-	receipt1 := createTestReceipt(t)
+	receipt1 := createTestReceipt(t, true)
 	receipt2, err := testQueries.GetReceipt(context.Background(), receipt1.ID)
 
 	require.NoError(t, err)
@@ -51,7 +59,7 @@ func TestGetReceipt(t *testing.T) {
 }
 
 func TestDeleteReceipt(t *testing.T) {
-	receipt1 := createTestReceipt(t)
+	receipt1 := createTestReceipt(t, false)
 	err := testQueries.DeleteReceipt(context.Background(), receipt1.ID)
 	require.NoError(t, err)
 
@@ -63,7 +71,7 @@ func TestDeleteReceipt(t *testing.T) {
 
 func TestListAccounts(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		createTestReceipt(t)
+		createTestReceipt(t, true)
 	}
 
 	arg := ListReceiptsParams{

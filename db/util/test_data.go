@@ -12,10 +12,6 @@ func init() {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
-func RandomInt(min, max int64) int64 {
-	return min + rand.Int63n(max-min+1)
-}
-
 func RandomString(n int) string {
 	var sb strings.Builder
 	k := len(alphabet)
@@ -46,6 +42,6 @@ func RandomDescription() string {
 	return RandomString(12)
 }
 
-func RandomPrice() int64 {
-	return RandomInt(0, 1000)
+func RandomPrice() float64 {
+	return rand.Float64()
 }

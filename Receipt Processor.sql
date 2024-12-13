@@ -10,7 +10,7 @@ CREATE TABLE "receipt_items" (
   "id" bigserial PRIMARY KEY,
   "receipt_id" bigint NOT NULL,
   "short_description" varchar NOT NULL,
-  "price" bigint NOT NULL,
+  "price" double precision NOT NULL,
   "creation_time" timestamptz NOT NULL DEFAULT (now())
 );
 

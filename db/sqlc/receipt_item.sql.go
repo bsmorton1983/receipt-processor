@@ -20,9 +20,9 @@ INSERT INTO receipt_items (
 `
 
 type CreateReceiptItemParams struct {
-	ReceiptID        int64  `json:"receipt_id"`
-	ShortDescription string `json:"short_description"`
-	Price            int64  `json:"price"`
+	ReceiptID        int64   `json:"receipt_id"`
+	ShortDescription string  `json:"short_description"`
+	Price            float64 `json:"price"`
 }
 
 func (q *Queries) CreateReceiptItem(ctx context.Context, arg CreateReceiptItemParams) (ReceiptItem, error) {

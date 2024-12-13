@@ -20,6 +20,6 @@ type ReceiptItem struct {
 	ID               int64     `json:"id"`
 	ReceiptID        int64     `json:"receipt_id"`
 	ShortDescription string    `json:"short_description"`
-	Price            int64     `json:"price"`
+	Price            float64   `json:"price"`
 	CreationTime     time.Time `json:"creation_time"`
 }

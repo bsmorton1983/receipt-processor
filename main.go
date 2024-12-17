@@ -6,7 +6,7 @@ import (
 
 	"github.com/bsmorton1983/receipt_processor/api"
 	db "github.com/bsmorton1983/receipt_processor/db/sqlc"
-	"github.com/bsmorton1983/receipt_processor/db/util"
+	"github.com/bsmorton1983/receipt_processor/util"
 	_ "github.com/lib/pq"
 )
 

@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createReceipt = `-- name: CreateReceipt :one
@@ -43,7 +45,7 @@ DELETE FROM receipts
 WHERE id = $1
 `
 
-func (q *Queries) DeleteReceipt(ctx context.Context, id int64) error {
+func (q *Queries) DeleteReceipt(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteReceipt, id)
 	return err
 }
@@ -53,7 +55,7 @@ SELECT id, retailer, purchase_date, purchase_time, creation_time FROM receipts
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetReceipt(ctx context.Context, id int64) (Receipt, error) {
+func (q *Queries) GetReceipt(ctx context.Context, id uuid.UUID) (Receipt, error) {
 	row := q.db.QueryRowContext(ctx, getReceipt, id)
 	var i Receipt
 	err := row.Scan(

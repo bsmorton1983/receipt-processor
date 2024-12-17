@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createReceiptItem = `-- name: CreateReceiptItem :one
@@ -20,9 +22,9 @@ INSERT INTO receipt_items (
 `
 
 type CreateReceiptItemParams struct {
-	ReceiptID        int64   `json:"receipt_id"`
-	ShortDescription string  `json:"short_description"`
-	Price            float64 `json:"price"`
+	ReceiptID        uuid.UUID `json:"receipt_id"`
+	ShortDescription string    `json:"short_description"`
+	Price            float64   `json:"price"`
 }
 
 func (q *Queries) CreateReceiptItem(ctx context.Context, arg CreateReceiptItemParams) (ReceiptItem, error) {
@@ -43,7 +45,7 @@ DELETE FROM receipt_items
 WHERE id = $1
 `
 
-func (q *Queries) DeleteReceiptItem(ctx context.Context, id int64) error {
+func (q *Queries) DeleteReceiptItem(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteReceiptItem, id)
 	return err
 }
@@ -53,7 +55,7 @@ SELECT id, receipt_id, short_description, price, creation_time FROM receipt_item
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetReceiptItem(ctx context.Context, id int64) (ReceiptItem, error) {
+func (q *Queries) GetReceiptItem(ctx context.Context, id uuid.UUID) (ReceiptItem, error) {
 	row := q.db.QueryRowContext(ctx, getReceiptItem, id)
 	var i ReceiptItem
 	err := row.Scan(
@@ -75,9 +77,9 @@ OFFSET $3
 `
 
 type ListReceiptItemsParams struct {
-	ReceiptID int64 `json:"receipt_id"`
-	Limit     int32 `json:"limit"`
-	Offset    int32 `json:"offset"`
+	ReceiptID uuid.UUID `json:"receipt_id"`
+	Limit     int32     `json:"limit"`
+	Offset    int32     `json:"offset"`
 }
 
 func (q *Queries) ListReceiptItems(ctx context.Context, arg ListReceiptItemsParams) ([]ReceiptItem, error) {

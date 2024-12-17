@@ -45,3 +45,7 @@ func RandomDescription() string {
 func RandomPrice() float64 {
 	return rand.Float64()
 }
+
+func RandomInt(min, max int64) int64 {
+	return min + rand.Int63n(max-min+1)
+}

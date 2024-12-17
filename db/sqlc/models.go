@@ -6,10 +6,12 @@ package db
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Receipt struct {
-	ID           int64     `json:"id"`
+	ID           uuid.UUID `json:"id"`
 	Retailer     string    `json:"retailer"`
 	PurchaseDate string    `json:"purchase_date"`
 	PurchaseTime string    `json:"purchase_time"`
@@ -17,8 +19,8 @@ type Receipt struct {
 }
 
 type ReceiptItem struct {
-	ID               int64     `json:"id"`
-	ReceiptID        int64     `json:"receipt_id"`
+	ID               uuid.UUID `json:"id"`
+	ReceiptID        uuid.UUID `json:"receipt_id"`
 	ShortDescription string    `json:"short_description"`
 	Price            float64   `json:"price"`
 	CreationTime     time.Time `json:"creation_time"`

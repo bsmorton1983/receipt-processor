@@ -11,25 +11,27 @@ import (
 
 	db "github.com/bsmorton1983/receipt_processor/db/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type receiptItemRequest struct {
-	ShortDescription string `json:"shortDescription" binding:"required`
-	Price            string `json:"price" binding:"required`
+	ShortDescription string `json:"shortDescription" binding:"required"`
+	Price            string `json:"price" binding:"required"`
 }
 
 type processReceiptRequest struct {
-	Retailer     string               `json:"retailer" binding:"required`
-	PurchaseDate string               `json:"purchaseDate" binding:"required`
-	PurchaseTime string               `json:"purchaseTime" binding:"required`
-	Items        []receiptItemRequest `json:"items" binding:"required`
-	Total        string               `json:"total" binding:"required`
+	Retailer     string               `json:"retailer" binding:"required"`
+	PurchaseDate string               `json:"purchaseDate" binding:"required"`
+	PurchaseTime string               `json:"purchaseTime" binding:"required"`
+	Items        []receiptItemRequest `json:"items" binding:"required"`
+	Total        string               `json:"total" binding:"required"`
 }
 
 type processReceiptResponse struct {
-	Id string
+	ID uuid.UUID
 }
 
+// processReceipt handles the /receipts/process api call
 func (server *Server) processReceipt(ctx *gin.Context) {
 	var req processReceiptRequest
 	var res processReceiptResponse
@@ -51,6 +53,7 @@ func (server *Server) processReceipt(ctx *gin.Context) {
 	}
 
 	for _, receipt_item := range req.Items {
+
 		price, err := strconv.ParseFloat(receipt_item.Price, 64)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -68,18 +71,19 @@ func (server *Server) processReceipt(ctx *gin.Context) {
 		}
 	}
 
-	res.Id = strconv.FormatInt(receipt.ID, 10)
+	res.ID = receipt.ID
 	ctx.JSON(http.StatusOK, res)
 }
 
 type getPointsRequest struct {
-	ID int64 `uri:"id" binding:"required"`
+	ID string `uri:"id" binding:"required"`
 }
 
 type getPointsResponse struct {
 	Points int64
 }
 
+// getPoints handles the /receipts/:id/points api call
 func (server *Server) getPoints(ctx *gin.Context) {
 	var req getPointsRequest
 	var res getPointsResponse
@@ -88,8 +92,12 @@ func (server *Server) getPoints(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	receipt, err := server.store.GetReceipt(ctx, req.ID)
+	id, err := uuid.Parse(req.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	receipt, err := server.store.GetReceipt(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -98,7 +106,6 @@ func (server *Server) getPoints(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
 	for _, c := range receipt.Retailer {
 		if unicode.IsLetter(c) || unicode.IsNumber(c) {
 			points += 1
@@ -136,6 +143,7 @@ func (server *Server) getPoints(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// helper function to calculate points for the receipt purchase date
 func calculateDatePoints(purchaseDate string) (int64, error) {
 	points := int64(0)
 	date, err := strconv.ParseInt(purchaseDate[len(purchaseDate)-2:], 10, 64)
@@ -148,6 +156,7 @@ func calculateDatePoints(purchaseDate string) (int64, error) {
 	return points, err
 }
 
+// helper function to calculate points for the receipt purchase time
 func calculateTimePoints(purchaseTime string) (int64, error) {
 	points := int64(0)
 	hour, err := strconv.ParseInt(purchaseTime[0:2], 10, 64)
@@ -160,6 +169,7 @@ func calculateTimePoints(purchaseTime string) (int64, error) {
 	return points, err
 }
 
+// helper function to calculate points for the receipt purchase item
 func calculateItemPoints(receipt_items []db.ReceiptItem) int64 {
 	total := float64(0)
 	points := int64(0)

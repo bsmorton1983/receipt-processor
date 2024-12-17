@@ -6,10 +6,68 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bsmorton1983/receipt_processor/db/util"
+	"github.com/bsmorton1983/receipt_processor/util"
 	"github.com/stretchr/testify/require"
 )
 
+// TestCreateReceiptItem test receipt item db create
+func TestCreateReceiptItem(t *testing.T) {
+	createTestReceiptItem(t, createTestReceipt(t, true), true)
+}
+
+// TestGetReceiptItem test receipt item db get
+func TestGetReceiptItem(t *testing.T) {
+	receipt_item1 := createTestReceiptItem(t, createTestReceipt(t, true), true)
+	receipt_item2, err := testQueries.GetReceiptItem(context.Background(), receipt_item1.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, receipt_item2)
+
+	require.Equal(t, receipt_item1.ID, receipt_item2.ID)
+	require.Equal(t, receipt_item1.ReceiptID, receipt_item2.ReceiptID)
+	require.Equal(t, receipt_item1.ShortDescription, receipt_item2.ShortDescription)
+	require.Equal(t, receipt_item1.Price, receipt_item2.Price)
+
+	require.WithinDuration(t, receipt_item1.CreationTime, receipt_item2.CreationTime, time.Second)
+}
+
+// TestDeleteReceiptItem test receipt item db delete
+func TestDeleteReceiptItem(t *testing.T) {
+	receipt := createTestReceipt(t, true)
+	receipt_item1 := createTestReceiptItem(t, receipt, false)
+	err := testQueries.DeleteReceiptItem(context.Background(), receipt_item1.ID)
+	require.NoError(t, err)
+
+	receipt_item2, err := testQueries.GetReceiptItem(context.Background(), receipt_item1.ID)
+	require.Error(t, err)
+	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.Empty(t, receipt_item2)
+}
+
+// TestDeleteReceiptItem test receipt item db list
+func TestListReceiptItems(t *testing.T) {
+	receipt := createTestReceipt(t, true)
+	for i := 0; i < 10; i++ {
+		createTestReceiptItem(t, receipt, true)
+	}
+
+	arg := ListReceiptItemsParams{
+		ReceiptID: receipt.ID,
+		Limit:     5,
+		Offset:    5,
+	}
+
+	receipt_items, err := testQueries.ListReceiptItems(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, receipt_items, 5)
+
+	for _, receipt_item := range receipt_items {
+		require.NotEmpty(t, receipt_item)
+		require.Equal(t, arg.ReceiptID, receipt_item.ReceiptID)
+	}
+}
+
+// createTestReceiptItem create receipt item in db and verify results
 func createTestReceiptItem(t *testing.T, receipt Receipt, add_to_delete_queue bool) ReceiptItem {
 	arg := CreateReceiptItemParams{
 		ReceiptID:        receipt.ID,
@@ -37,57 +95,4 @@ func createTestReceiptItem(t *testing.T, receipt Receipt, add_to_delete_queue bo
 	})
 
 	return receipt_item
-}
-
-func TestCreateReceiptItem(t *testing.T) {
-	createTestReceiptItem(t, createTestReceipt(t, true), true)
-}
-
-func TestGetReceiptItem(t *testing.T) {
-	receipt_item1 := createTestReceiptItem(t, createTestReceipt(t, true), true)
-	receipt_item2, err := testQueries.GetReceiptItem(context.Background(), receipt_item1.ID)
-
-	require.NoError(t, err)
-	require.NotEmpty(t, receipt_item2)
-
-	require.Equal(t, receipt_item1.ID, receipt_item2.ID)
-	require.Equal(t, receipt_item1.ReceiptID, receipt_item2.ReceiptID)
-	require.Equal(t, receipt_item1.ShortDescription, receipt_item2.ShortDescription)
-	require.Equal(t, receipt_item1.Price, receipt_item2.Price)
-
-	require.WithinDuration(t, receipt_item1.CreationTime, receipt_item2.CreationTime, time.Second)
-}
-
-func TestDeleteReceiptItem(t *testing.T) {
-	receipt := createTestReceipt(t, true)
-	receipt_item1 := createTestReceiptItem(t, receipt, false)
-	err := testQueries.DeleteReceiptItem(context.Background(), receipt_item1.ID)
-	require.NoError(t, err)
-
-	receipt_item2, err := testQueries.GetReceiptItem(context.Background(), receipt_item1.ID)
-	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
-	require.Empty(t, receipt_item2)
-}
-
-func TestListReceiptItems(t *testing.T) {
-	receipt := createTestReceipt(t, true)
-	for i := 0; i < 10; i++ {
-		createTestReceiptItem(t, receipt, true)
-	}
-
-	arg := ListReceiptItemsParams{
-		ReceiptID: receipt.ID,
-		Limit:     5,
-		Offset:    5,
-	}
-
-	receipt_items, err := testQueries.ListReceiptItems(context.Background(), arg)
-	require.NoError(t, err)
-	require.Len(t, receipt_items, 5)
-
-	for _, receipt_item := range receipt_items {
-		require.NotEmpty(t, receipt_item)
-		require.Equal(t, arg.ReceiptID, receipt_item.ReceiptID)
-	}
 }

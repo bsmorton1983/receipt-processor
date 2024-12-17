@@ -1,5 +1,5 @@
 CREATE TABLE "receipts" (
-  "id" bigserial PRIMARY KEY,
+  "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
   "retailer" varchar NOT NULL,
   "purchase_date" varchar NOT NULL,
   "purchase_time" varchar NOT NULL,
@@ -7,8 +7,8 @@ CREATE TABLE "receipts" (
 );
 
 CREATE TABLE "receipt_items" (
-  "id" bigserial PRIMARY KEY,
-  "receipt_id" bigint NOT NULL,
+  "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
+  "receipt_id" uuid NOT NULL,
   "short_description" varchar NOT NULL,
   "price" double precision NOT NULL,
   "creation_time" timestamptz NOT NULL DEFAULT (now())
